@@ -1,17 +1,21 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { ExtensionBudgetProvider } from './contexts/ExtensionBudgetContext';
+import { MasterDataProvider } from './contexts/MasterDataContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import LoadingSpinner from './components/LoadingSpinner';
 import ProposalList from './pages/ProposalList';
 import CreateProposal from './pages/CreateProposal';
+import MonitoringDashboard from './pages/MonitoringDashboard';
+import MonitoringImport from './pages/MonitoringImport';
+import FundManagement from './pages/FundManagement';
+import Reports from './pages/Reports';
 import ApprovalQueue from './pages/ApprovalQueue';
-import AdminTools from './pages/AdminTools';
-import WFPDashboard from './pages/WFPDashboard';
-import CreateWFPActivity from './pages/CreateWFPActivity';
-import WFPImport from './pages/WFPImport';
+import MasterDataManagement from './pages/MasterDataManagement';
+import FiscalYearManagement from './pages/FiscalYearManagement';
 
 const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { firebaseUser, loading } = useAuth();
@@ -85,6 +89,38 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
+        path="/monitoring"
+        element={
+          <ProtectedRoute>
+            <MonitoringDashboard />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/monitoring/import"
+        element={
+          <ProtectedRoute>
+            <MonitoringImport />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/funds"
+        element={
+          <ProtectedRoute>
+            <FundManagement />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/reports"
+        element={
+          <ProtectedRoute>
+            <Reports />
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/approvals"
         element={
           <ProtectedRoute>
@@ -93,34 +129,18 @@ const AppRoutes: React.FC = () => {
         }
       />
       <Route
-        path="/admin/tools"
+        path="/master-data"
         element={
           <ProtectedRoute>
-            <AdminTools />
+            <MasterDataManagement />
           </ProtectedRoute>
         }
       />
       <Route
-        path="/wfp"
+        path="/fiscal-year"
         element={
           <ProtectedRoute>
-            <WFPDashboard />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/wfp/create"
-        element={
-          <ProtectedRoute>
-            <CreateWFPActivity />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/wfp/import"
-        element={
-          <ProtectedRoute>
-            <WFPImport />
+            <FiscalYearManagement />
           </ProtectedRoute>
         }
       />
@@ -131,13 +151,17 @@ const AppRoutes: React.FC = () => {
 
 const App: React.FC = () => {
   return (
-    <AuthProvider>
-      <Router>
-        <div className="min-h-screen bg-primary-50">
-          <AppRoutes />
-        </div>
-      </Router>
-    </AuthProvider>
+    <MasterDataProvider>
+      <ExtensionBudgetProvider>
+        <AuthProvider>
+          <Router>
+            <div className="min-h-screen bg-primary-50">
+              <AppRoutes />
+            </div>
+          </Router>
+        </AuthProvider>
+      </ExtensionBudgetProvider>
+    </MasterDataProvider>
   );
 };
 

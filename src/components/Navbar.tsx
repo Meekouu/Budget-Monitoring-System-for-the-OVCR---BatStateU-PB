@@ -41,49 +41,59 @@ const Navbar: React.FC<NavbarProps> = ({ user, onLogout }) => {
                 Dashboard
               </Link>
               <Link
-                to="/proposals"
+                to="/monitoring"
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActive('/proposals')
+                  location.pathname.startsWith('/monitoring')
                     ? 'border-primary-500 text-gray-900'
                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 }`}
               >
-                Proposals
+                Budget Monitoring
               </Link>
-              {user?.role === 'admin' && (
-                <Link
-                  to="/approvals"
-                  className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                    isActive('/approvals')
-                      ? 'border-primary-500 text-gray-900'
-                      : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
-                  }`}
-                >
-                  Approval Queue
-                </Link>
-              )}
               <Link
-                to="/wfp"
+                to="/funds"
                 className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
-                  isActive('/wfp')
+                  location.pathname.startsWith('/funds')
                     ? 'border-primary-500 text-gray-900'
                     : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
                 }`}
               >
-                WFP Activities
+                Fund Management
               </Link>
-              <a
-                href="#"
-                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
+              <Link
+                to="/reports"
+                className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                  isActive('/reports')
+                    ? 'border-primary-500 text-gray-900'
+                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                }`}
               >
                 Reports
-              </a>
-              <a
-                href="#"
-                className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"
-              >
-                Settings
-              </a>
+              </Link>
+              {user?.role === 'admin' && (
+                <>
+                  <Link
+                    to="/master-data"
+                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                      isActive('/master-data')
+                        ? 'border-primary-500 text-gray-900'
+                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                    }`}
+                  >
+                    Master Data
+                  </Link>
+                  <Link
+                    to="/fiscal-year"
+                    className={`inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium ${
+                      isActive('/fiscal-year')
+                        ? 'border-primary-500 text-gray-900'
+                        : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700'
+                    }`}
+                  >
+                    Fiscal Year
+                  </Link>
+                </>
+              )}
             </div>
           </div>
           

@@ -46,6 +46,8 @@ export interface BudgetLine {
 
 export type BudgetTransactionStatus = 'Draft' | 'Evaluation' | 'Proposal' | 'PR' | 'Obligated' | 'Disbursed' | 'Rejected' | 'Returned';
 
+export type WorkflowStage = 'wfp' | 'proposal' | 'monitoring' | 'supplemental' | 'bur1' | 'bur2';
+
 export interface BudgetTransaction {
   id: string;
   budgetCode: string;
@@ -65,8 +67,11 @@ export interface BudgetTransaction {
   otherFunding?: string;
   amountRequested: number;
   isSupplemental: boolean;
+  stage?: WorkflowStage; // Workflow stage: proposal, monitoring, supplemental, bur1, bur2
   fundCategory: string; // GAD, MDS, STF, Extension, SUPP
   fundingSource: string;
+  approvedAmount?: number; // BUR2 approved amount
+  balance?: number; // Remaining balance after obligations/disbursements
   trackingNo?: string;
   remarks?: string;
   prNo?: string;

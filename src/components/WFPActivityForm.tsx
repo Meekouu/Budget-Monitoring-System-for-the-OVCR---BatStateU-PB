@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import type { WFPActivity, WFPActivityStatus } from '../types/wfp';
-import { getCampuses } from '../lib/budgetFirestore';
 import { createWFPActivity, updateWFPActivity } from '../lib/wfpFirestore';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -15,6 +14,7 @@ const WFPActivityForm: React.FC<WFPActivityFormProps> = ({ onSuccess, initialDat
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [campuses, setCampuses] = useState<any[]>([]);
+  const [generatingBudgetCode, setGeneratingBudgetCode] = useState(false);
 
   const [formData, setFormData] = useState({
     budgetCode: initialData?.budgetCode || '',
@@ -34,33 +34,6 @@ const WFPActivityForm: React.FC<WFPActivityFormProps> = ({ onSuccess, initialDat
   const statusOptions: WFPActivityStatus[] = ['planned', 'ongoing', 'completed', 'cancelled'];
 
   const getProgramOptionsByCampus = (campusId: string) => {
-  const allOptions = [
-    // Pablo Borbon (PB) Campus Programs
-    'CABEIHM - College of Accountancy, Business, Economics and International Hospitality Management',
-    'CAS - College of Arts and Sciences',
-    'CCJE - College of Criminal Justice and Education',
-    'CHS - College of Health Sciences',
-    'CTE - College of Teacher Education',
-    'COM - College of Medicine',
-    'COL - College of Law',
-    
-    // Lemery Campus
-    'Lemery Campus Programs',
-    
-    // Rosario Campus  
-    'Rosario Campus Programs',
-    
-    // San Juan Campus
-    'San Juan Campus Programs',
-    
-    // General/None
-    '--None--',
-  ];
-
-  if (!campusId) {
-    return allOptions;
-  }
-
   // Filter options based on campus
   switch (campusId) {
     case 'pb':
@@ -76,7 +49,6 @@ const WFPActivityForm: React.FC<WFPActivityFormProps> = ({ onSuccess, initialDat
       ];
     case 'lemery':
       return [
-        'Lemery Campus Programs',
         '--None--',
       ];
     case 'rosario':
@@ -94,59 +66,100 @@ const WFPActivityForm: React.FC<WFPActivityFormProps> = ({ onSuccess, initialDat
   }
 };
 
-// Budget code mapping based on campus and program/college
-const generateBudgetCode = (campusId: string, programName: string): string => {
-  const programCode = programName.split(' - ')[0].split(' ')[0]; // Get the acronym part
-  
+// Budget code generation based on campus and incrementing
+const generateBudgetCode = async (campusId: string, programName: string): Promise<string> => {
   const campusCodeMap: { [key: string]: string } = {
-    'pb': '250',
-    'lemery': '251',
-    'rosario': '252',
-    'san-juan': '253',
+    'pb': 'PB',
+    'lemery': 'LEM', 
+    'rosario': 'ROS',
+    'san-juan': 'SJ',
   };
   
-  const programCodeMap: { [key: string]: string } = {
-    'CABEIHM': '180005',
-    'CAS': '180100',
-    'CCJE': '191459',
-    'CHS': '180108',
-    'CTE': '180134',
-    'COM': '291030',
-    'COL': '291415',
-    'Lemery': '280041',
-    'Rosario': '280066',
-    'San': '291415',
-    '--None--': '999999',
-  };
+  const campusCode = campusCodeMap[campusId] || 'PB';
   
-  const campusPrefix = campusCodeMap[campusId] || '250';
-  const programSuffix = programCodeMap[programCode] || '999999';
+  // Get program code from program name
+  let programCode = 'NONE';
+  if (programName && programName !== '--None--') {
+    // Extract the acronym part (before the dash or first word)
+    if (programName.includes(' - ')) {
+      programCode = programName.split(' - ')[0];
+    } else if (programName.includes(' ')) {
+      programCode = programName.split(' ')[0];
+    } else {
+      programCode = programName.toUpperCase();
+    }
+  }
   
-  return `${campusPrefix}${programSuffix}`;
+  try {
+    // Import the cached Firestore functions to get existing activities
+    const { getAllWFPActivities } = await import('../lib/cachedFirestore');
+    
+    // Get all activities to find the highest budget code for this campus-program combination
+    const activities = await getAllWFPActivities(1, 1000);
+    
+    // Filter activities by campus and program pattern
+    const campusProgramPattern = `${campusCode}-${programCode}-`;
+    const campusProgramActivities = activities.filter(activity => 
+      activity.budgetCode && activity.budgetCode.startsWith(campusProgramPattern)
+    );
+    
+    // Find the highest sequence number for this campus-program combination
+    let maxSequence = 0;
+    campusProgramActivities.forEach(activity => {
+      const parts = activity.budgetCode.split('-');
+      if (parts.length === 3) {
+        const sequence = parseInt(parts[2]);
+        if (!isNaN(sequence) && sequence > maxSequence) {
+          maxSequence = sequence;
+        }
+      }
+    });
+    
+    // Increment by 1 and format with 3 digits
+    const newSequence = maxSequence + 1;
+    const formattedSequence = newSequence.toString().padStart(3, '0');
+    
+    return `${campusCode}-${programCode}-${formattedSequence}`;
+    
+  } catch (error) {
+    console.error('Error generating budget code:', error);
+    // Fallback to campus-program-001 if there's an error
+    return `${campusCode}-${programCode}-001`;
+  }
 };
 
   useEffect(() => {
-    const loadData = async () => {
-      try {
-        const campusesData = await getCampuses();
-        setCampuses(campusesData);
-      } catch (err) {
-        console.error('Error loading data:', err);
-        setError('Failed to load master data');
-      }
-    };
-    loadData();
+    // Use hardcoded campus data to ensure dropdown always works
+    const campusData = [
+      { id: 'pb', name: 'Pablo Borbon' },
+      { id: 'lemery', name: 'Lemery' },
+      { id: 'rosario', name: 'Rosario' },
+      { id: 'san-juan', name: 'San Juan' },
+    ];
+    console.log('Setting campus data:', campusData);
+    setCampuses(campusData);
   }, []);
 
   // Auto-generate budget code when campus or program changes
   useEffect(() => {
-    if (formData.campusId && formData.programName) {
-      const generatedBudgetCode = generateBudgetCode(formData.campusId, formData.programName);
-      setFormData(prev => ({
-        ...prev,
-        budgetCode: generatedBudgetCode,
-      }));
-    }
+    const generateCode = async () => {
+      if (formData.campusId && formData.programName) {
+        try {
+          setGeneratingBudgetCode(true);
+          const generatedBudgetCode = await generateBudgetCode(formData.campusId, formData.programName);
+          setFormData(prev => ({
+            ...prev,
+            budgetCode: generatedBudgetCode,
+          }));
+        } catch (error) {
+          console.error('Error generating budget code:', error);
+        } finally {
+          setGeneratingBudgetCode(false);
+        }
+      }
+    };
+    
+    generateCode();
   }, [formData.campusId, formData.programName]);
 
   // Reset program when campus changes
@@ -155,9 +168,10 @@ const generateBudgetCode = (campusId: string, programName: string): string => {
       // Check if current program is valid for the new campus
       const validPrograms = getProgramOptionsByCampus(formData.campusId);
       if (!validPrograms.includes(formData.programName)) {
+        // Default to '--None--' for campus changes
         setFormData(prev => ({
           ...prev,
-          programName: '',
+          programName: '--None--',
           budgetCode: '',
         }));
       }
@@ -239,11 +253,14 @@ const generateBudgetCode = (campusId: string, programName: string): string => {
               onChange={handleInputChange}
               readOnly
               className="w-full px-3 py-2 border border-gray-300 rounded-md bg-gray-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-primary-500"
-              placeholder="Select campus and program to auto-generate"
+              placeholder={generatingBudgetCode ? 'Generating...' : 'Select campus and program to auto-generate'}
               required
             />
             <p className="mt-1 text-xs text-gray-500">
-              Automatically generated based on campus and program selection
+              {generatingBudgetCode 
+                ? 'Finding next available budget code...' 
+                : 'Automatically generated based on existing codes (+1 increment)'
+              }
             </p>
           </div>
           <div>
@@ -283,6 +300,11 @@ const generateBudgetCode = (campusId: string, programName: string): string => {
             {!formData.campusId && (
               <p className="mt-1 text-xs text-gray-500">
                 Select a campus first to see available programs
+              </p>
+            )}
+            {formData.campusId === 'lemery' && (
+              <p className="mt-1 text-xs text-gray-500">
+                No specific programs available for Lemery campus
               </p>
             )}
           </div>

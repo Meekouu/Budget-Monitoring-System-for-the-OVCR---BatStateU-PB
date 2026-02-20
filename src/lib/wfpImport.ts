@@ -12,6 +12,11 @@ export interface WFPImportData {
   Female: number;
   Allocation: string; // Currency format like "₱4,000.00"
   'Last Updated': string;
+  Status?: string; // Optional status from spreadsheet
+  'Source of Fund'?: string; // Optional funding source
+  Remarks?: string; // Optional remarks
+  'Actual Beneficiaries'?: number; // Optional actual beneficiaries
+  'Actual Expenditure'?: string; // Optional actual expenditure
 }
 
 export const parseCurrency = (currencyString: string): number => {
@@ -57,6 +62,32 @@ export const mapCampusNameToId = (campusName: string): string => {
   return campusMap[campusName] || campusName.toLowerCase().replace(/\s+/g, '-');
 };
 
+export const mapStatusToSystem = (status: string): 'planned' | 'ongoing' | 'completed' | 'cancelled' => {
+  if (!status) return 'planned';
+  
+  const statusLower = status.toLowerCase().trim();
+  switch (statusLower) {
+    case 'completed':
+    case 'complete':
+    case 'done':
+      return 'completed';
+    case 'ongoing':
+    case 'in progress':
+    case 'in-progress':
+    case 'active':
+      return 'ongoing';
+    case 'cancelled':
+    case 'canceled':
+    case 'terminated':
+      return 'cancelled';
+    case 'planned':
+    case 'pending':
+    case 'scheduled':
+    default:
+      return 'planned';
+  }
+};
+
 export const importWFPData = async (
   data: WFPImportData[], 
   userId: string,
@@ -95,7 +126,10 @@ export const importWFPData = async (
         beneficiaries: row['Beneficiaries Total'], // Use total beneficiaries
         allocation: parseCurrency(row.Allocation),
         lastUpdated: parseDate(row['Last Updated']),
-        status: 'planned',
+        status: mapStatusToSystem(row.Status || ''), // Map status from spreadsheet
+        actualBeneficiaries: row['Actual Beneficiaries'],
+        actualExpenditure: row['Actual Expenditure'] ? parseCurrency(row['Actual Expenditure']) : undefined,
+        notes: row.Remarks, // Map remarks to notes field
         createdBy: userId,
       };
 
@@ -135,14 +169,20 @@ export const parseCSVFile = (file: File): Promise<WFPImportData[]> => {
         console.log('CSV Headers:', headers);
         console.log('Total lines:', lines.length);
 
-        // Validate headers
+        // Validate headers - check for required headers only
         const requiredHeaders = ['Budget Code', 'Campus', 'College', 'Project', 'Activity', 'Beneficiaries Total', 'Male', 'Female', 'Allocation', 'Last Updated'];
+        const optionalHeaders = ['Status', 'Source of Fund', 'Remarks', 'Actual Beneficiaries', 'Actual Expenditure'];
+        
         const missingHeaders = requiredHeaders.filter(header => !headers.includes(header));
         if (missingHeaders.length > 0) {
           console.error('Missing required headers:', missingHeaders);
           reject(new Error(`CSV is missing required headers: ${missingHeaders.join(', ')}`));
           return;
         }
+        
+        // Log which optional headers are found
+        const foundOptionalHeaders = optionalHeaders.filter(header => headers.includes(header));
+        console.log('Found optional headers:', foundOptionalHeaders);
 
         for (let i = 1; i < lines.length; i++) {
           const line = lines[i].trim();
@@ -188,6 +228,11 @@ export const parseCSVFile = (file: File): Promise<WFPImportData[]> => {
           row.Male = male;
           row.Female = female;
 
+          // Handle optional actual beneficiaries and expenditure
+          if (row['Actual Beneficiaries']) {
+            row['Actual Beneficiaries'] = parseInt(String(row['Actual Beneficiaries']).replace(/,/g, '')) || 0;
+          }
+          
           // Debug allocation parsing specifically
           const allocationValue = row.Allocation;
           console.log('Raw allocation value:', JSON.stringify(allocationValue));
@@ -198,6 +243,8 @@ export const parseCSVFile = (file: File): Promise<WFPImportData[]> => {
           // Debug: log the parsed data
           console.log('Parsed row:', row);
           console.log('Beneficiaries - Total:', totalBeneficiaries, 'Male:', male, 'Female:', female);
+          console.log('Status from spreadsheet:', row.Status);
+          console.log('Remarks:', row.Remarks);
 
           data.push(row as WFPImportData);
         }

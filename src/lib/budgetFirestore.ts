@@ -1,4 +1,4 @@
-import { collection, doc, addDoc, updateDoc, getDoc, getDocs, query, where, orderBy, limit, Timestamp } from 'firebase/firestore';
+import { collection, doc, addDoc, updateDoc, deleteDoc, getDoc, getDocs, query, where, orderBy, limit, Timestamp, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import type { BudgetTransaction, BudgetLine, Campus, College, Program, Project, Activity, FundingSource } from '../types/budget';
 
@@ -36,6 +36,11 @@ export const updateBudgetTransaction = async (id: string, data: Partial<BudgetTr
   await updateDoc(docRef, updateData);
 };
 
+export const deleteBudgetTransaction = async (id: string) => {
+  const docRef = doc(budgetTransactionsCollection, id);
+  await deleteDoc(docRef);
+};
+
 export const getBudgetTransaction = async (id: string): Promise<BudgetTransaction | null> => {
   const docRef = doc(budgetTransactionsCollection, id);
   const docSnap = await getDoc(docRef);
@@ -45,6 +50,12 @@ export const getBudgetTransaction = async (id: string): Promise<BudgetTransactio
 
 export const getBudgetTransactionsByUser = async (userId: string): Promise<BudgetTransaction[]> => {
   const q = query(budgetTransactionsCollection, where('createdBy', '==', userId), orderBy('dateReceived', 'desc'));
+  const querySnapshot = await getDocs(q);
+  return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BudgetTransaction));
+};
+
+export const getAllBudgetTransactions = async (): Promise<BudgetTransaction[]> => {
+  const q = query(budgetTransactionsCollection, orderBy('dateReceived', 'desc'));
   const querySnapshot = await getDocs(q);
   return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BudgetTransaction));
 };
@@ -73,6 +84,12 @@ export const getBudgetLineByCode = async (budgetCode: string): Promise<BudgetLin
 export const getCampuses = async (): Promise<Campus[]> => {
   const querySnapshot = await getDocs(campusesCollection);
   return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Campus));
+};
+
+export const createCampus = async (id: string, data: Omit<Campus, 'id'>) => {
+  const docRef = doc(db, 'campuses', id);
+  await setDoc(docRef, data);
+  return id;
 };
 
 export const getColleges = async (): Promise<College[]> => {

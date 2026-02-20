@@ -19,4 +19,16 @@ export interface WFPActivity {
   createdBy: string;
   createdAt: Date;
   updatedAt: Date;
+  // Quarterly tracking
+  q1Target?: number;
+  q1Accomplished?: number;
+  q2Target?: number;
+  q2Accomplished?: number;
+  q3Target?: number;
+  q3Accomplished?: number;
+  q4Target?: number;
+  q4Accomplished?: number;
+  // Indicators
+  physicalAccomplishment?: number; // Percentage
+  budgetUtilization?: number; // Percentage
 }
