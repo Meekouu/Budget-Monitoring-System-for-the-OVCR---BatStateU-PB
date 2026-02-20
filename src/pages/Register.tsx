@@ -67,7 +67,7 @@ const Register: React.FC = () => {
             Create an account
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            For authorized OVCRDES personnel using institutional accounts
+            For authorized RDES personnel using institutional accounts
           </p>
         </div>
 

@@ -1,5 +1,5 @@
 /**
- * OVCRDES Budget Monitoring - Google Apps Script Sync Engine
+ * RDES Budget Monitoring - Google Apps Script Sync Engine
  * 
  * This script syncs data from the "Human-Layout" Google Sheet to Firebase Firestore
  * 
@@ -17,7 +17,7 @@ const CONFIG = {
   FIREBASE_BASE_URL: 'https://firestore.googleapis.com/v1/projects/',
   
   // Sheet Configuration
-  SHEET_NAME: 'OVCRDES Budget Monitoring 2025',
+  SHEET_NAME: 'RDES Budget Monitoring 2025',
   SUMMARY_START_ROW: 6,
   DATA_START_ROW: 11,
   

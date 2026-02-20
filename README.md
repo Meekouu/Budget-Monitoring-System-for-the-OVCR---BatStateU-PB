@@ -1,6 +1,6 @@
-# OVCRDES Budget Monitoring Portal
+# RDES Budget Monitoring Portal
 
-A modern, real-time budget monitoring web portal for OVCRDES (Office of the Vice Chancellor for Research, Development, and Extension Services) that bridges the gap between Google Sheets and a high-performance dashboard.
+A modern, real-time budget monitoring web portal for RDES (Research, Development, and Extension Services) that bridges the gap between Google Sheets and a high-performance dashboard.
 
 ## 🏗️ Architecture
 
@@ -27,7 +27,7 @@ React Web App (Real-time Dashboard)
 ### Prerequisites
 - Node.js 18+ 
 - Google Account (for Firebase & Apps Script)
-- Access to OVCRDES Budget Google Sheet
+- Access to RDES Budget Google Sheet
 
 ### 1. Frontend Setup
 
@@ -46,7 +46,7 @@ npm run dev
 
 1. **Create Firebase Project**
    - Go to [Firebase Console](https://console.firebase.google.com/)
-   - Create new project: `ovcrdes-budget-portal`
+   - Create new project: `rdes-budget-portal`
 
 2. **Enable Services**
    - Authentication → Sign-in method → Enable Google
@@ -154,7 +154,7 @@ VITE_FIREBASE_APP_ID=your_app_id
 
 ## 👥 User Roles
 
-### Admin (OVCRDES Central)
+### Admin (RDES Central)
 - View all campus data
 - Access to reports and exports
 - Full dashboard functionality
@@ -245,7 +245,7 @@ console.log('Firebase config:', import.meta.env.VITE_FIREBASE_PROJECT_ID);
 
 ## 📄 License
 
-This project is proprietary to OVCRDES. All rights reserved.
+This project is proprietary to RDES. All rights reserved.
 
 ## 📞 Support
 
